@@ -1,0 +1,222 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/client"
+}
+
+// User Authentication and Roles
+enum AdminRole {
+  ADMIN
+  MASTER_ADMIN
+  SUPER_ADMIN
+  REGIONAL_ADMIN
+}
+
+enum UserMembershipType {
+  ONE_CLUB
+  VIP
+  GOLD
+}
+
+enum ReferralType {
+  SELF
+  THIRD_PARTY
+}
+
+// Administrator Hierarchy
+model Administrator {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  phone         String
+  phoneVerifie  Boolean   @default(false)
+  password      String
+  name          String
+  role          AdminRole
+
+  // Hierarchical Relationships
+  parentAdmin   Administrator?  @relation("AdminHierarchy", fields: [parentAdminId], references: [id])
+  parentAdminId String?
+  childAdmins   Administrator[] @relation("AdminHierarchy")
+
+  // Franchise Relationships
+  masterFranchises   MasterFranchise[]
+  superFranchises    SuperFranchise[]
+  regionalFranchises RegionalFranchise[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Franchise Models
+model MasterFranchise {
+  id        String   @id @default(cuid())
+  name      String
+  countries String[]
+
+  admin   Administrator @relation(fields: [adminId], references: [id])
+  adminId String
+
+  superFranchises SuperFranchise[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SuperFranchise {
+  id      String @id @default(cuid())
+  name    String
+  country String
+
+  masterFranchise   MasterFranchise @relation(fields: [masterFranchiseId], references: [id])
+  masterFranchiseId String
+
+  admin   Administrator @relation(fields: [adminId], references: [id])
+  adminId String
+
+  regionalFranchises RegionalFranchise[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model RegionalFranchise {
+  id    String @id @default(cuid())
+  name  String
+  state String
+
+  superFranchise   SuperFranchise @relation(fields: [superFranchiseId], references: [id])
+  superFranchiseId String
+
+  admin   Administrator @relation(fields: [adminId], references: [id])
+  adminId String
+
+  chapters Chapter[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Chapter and Club Models
+model Chapter {
+  id   String @id @default(cuid())
+  name String
+
+  regionalFranchise   RegionalFranchise @relation(fields: [regionalFranchiseId], references: [id])
+  regionalFranchiseId String
+
+  chapterLeader   User?   @relation("ChapterLeadership", fields: [chapterLeaderId], references: [id])
+  chapterLeaderId String? @unique
+  clubs           Club[]
+
+  events ChapterEvent[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Club {
+  id   String @id @default(cuid())
+  name String
+
+  chapter   Chapter @relation(fields: [chapterId], references: [id])
+  chapterId String
+
+  clubLeader   User?   @relation("ClubLeadership", fields: [clubLeaderId], references: [id])
+  clubLeaderId String? @unique
+
+  members User[]
+
+  events ClubEvent[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// User Model
+model User {
+  id             String             @id @default(cuid())
+  email          String             @unique
+  emailVerified  Boolean            @default(false)
+  phone          String
+  phoneVerified  Boolean            @default(false)
+  password       String
+  name           String
+  membershipType UserMembershipType @default(ONE_CLUB)
+
+  // Membership Details
+  membershipStartDate DateTime @default(now())
+  membershipEndDate   DateTime
+
+  leadingChapter   Chapter? @relation("ChapterLeadership")
+  leadingChapterId String?  @unique
+
+  leadingClub   Club?   @relation("ClubLeadership")
+  leadingClubId String? @unique
+
+  // Club Memberships
+  clubs Club[]
+
+  // Referral System
+  referralsCreated  Referral[] @relation("ReferralCreator")
+  referralsReceived Referral[] @relation("ReferralReceiver")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Event Models
+model ChapterEvent {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  date        DateTime
+
+  chapter   Chapter @relation(fields: [chapterId], references: [id])
+  chapterId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ClubEvent {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  date        DateTime
+
+  club   Club   @relation(fields: [clubId], references: [id])
+  clubId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Referral Model
+model Referral {
+  id   String       @id @default(cuid())
+  type ReferralType
+
+  creator   User   @relation("ReferralCreator", fields: [creatorId], references: [id])
+  creatorId String
+
+  receiver   User   @relation("ReferralReceiver", fields: [receiverId], references: [id])
+  receiverId String
+
+  businessDetails String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model GmailVerificationCode {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  code      String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
