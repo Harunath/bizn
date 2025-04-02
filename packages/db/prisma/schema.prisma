@@ -32,11 +32,17 @@ model Administrator {
   email          String      @unique
   emailVerified  Boolean     @default(false)
   phone          String
-  phoneVerifie   Boolean     @default(false)
+  phoneVerified   Boolean     @default(false)
   password       String
-  name           String
+  firstname      String
+  lastname       String
+  bio            String?
   role           AdminRole
   
+  address     Json?    // { street, city, state, zip }
+
+  deleted        Boolean     @default(false)
+  deactivated    Boolean     @default(false)
   // Hierarchical Relationships
   parentAdmin    Administrator?  @relation("AdminHierarchy", fields: [parentAdminId], references: [id])
   parentAdminId  String?
@@ -46,6 +52,45 @@ model Administrator {
   masterFranchises   MasterFranchise[] 
   superFranchises    SuperFranchise[]
   regionalFranchises RegionalFranchise[]
+  
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+}
+
+// User Model
+model User {
+  id             String      @id @default(cuid())
+  email          String      @unique
+  emailVerified  Boolean     @default(false)
+  phone          String
+  phoneVerified  Boolean     @default(false)
+  password       String
+  firstname      String
+  lastname       String
+  bio            String?
+  address        Json?    // { street, city, state, zip }
+  deleted        Boolean     @default(false)
+  deactivated    Boolean     @default(false)
+  businessDetails BusinessDetails?
+  membershipType UserMembershipType @default(ONE_CLUB)
+  
+  // Membership Details
+  membershipStartDate DateTime  @default(now())
+  membershipEndDate   DateTime
+
+  leadingChapter     Chapter? @relation("ChapterLeadership")
+  leadingChapterId   String? @unique
+
+  leadingClub        Club? @relation("ClubLeadership")
+  leadingClubId      String? @unique
+
+  
+  // Club Memberships
+  clubs          Club[]
+  
+  // Referral System
+  referralsCreated   Referral[] @relation("ReferralCreator")
+  referralsReceived  Referral[] @relation("ReferralReceiver")
   
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
@@ -136,37 +181,17 @@ model Club {
   updatedAt      DateTime    @updatedAt
 }
 
-// User Model
-model User {
-  id             String      @id @default(cuid())
-  email          String      @unique
-  emailVerified  Boolean     @default(false)
-  phone          String
-  phoneVerified  Boolean     @default(false)
-  password       String
-  name           String
-  membershipType UserMembershipType @default(ONE_CLUB)
-  
-  // Membership Details
-  membershipStartDate DateTime  @default(now())
-  membershipEndDate   DateTime
 
-  leadingChapter     Chapter? @relation("ChapterLeadership")
-  leadingChapterId   String? @unique
 
-  leadingClub        Club? @relation("ClubLeadership")
-  leadingClubId      String? @unique
-
-  
-  // Club Memberships
-  clubs          Club[]
-  
-  // Referral System
-  referralsCreated   Referral[] @relation("ReferralCreator")
-  referralsReceived  Referral[] @relation("ReferralReceiver")
-  
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+model BusinessDetails {
+  id          String   @id @default(uuid())
+  businessName String
+  category    String
+  panNumber   String?  @unique
+  gstNumber   String?  @unique
+  verified    Boolean  @default(false)
+  user        User     @relation(fields: [userId], references: [id])
+  userId      String   @unique
 }
 
 // Event Models

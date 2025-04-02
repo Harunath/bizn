@@ -1,7 +1,5 @@
-import React from "react";
+import { redirect } from "next/navigation";
 
-const page = () => {
-	return <div>super-franchise</div>;
-};
-
-export default page;
+export default function page() {
+	redirect("/super-franchise/dashboard");
+}

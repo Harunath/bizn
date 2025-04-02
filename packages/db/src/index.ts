@@ -14,3 +14,6 @@ const prisma: ReturnType<typeof prismaClientSingleton> =
 export default prisma;
 
 if (process.env.NODE_ENV !== "production") globalThis.prismaGlobal = prisma;
+
+export * from "@prisma/client"; // Exports models, enums, and Prisma types
+export type { PrismaClient } from "@prisma/client"; // Ensures PrismaClient type is available

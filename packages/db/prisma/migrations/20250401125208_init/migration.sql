@@ -11,8 +11,13 @@ CREATE TYPE "ReferralType" AS ENUM ('SELF', 'THIRD_PARTY');
 CREATE TABLE "Administrator" (
     "id" TEXT NOT NULL,
     "email" TEXT NOT NULL,
+    "emailVerified" BOOLEAN NOT NULL DEFAULT false,
+    "phone" TEXT NOT NULL,
+    "phoneVerifie" BOOLEAN NOT NULL DEFAULT false,
     "password" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
+    "firstname" TEXT NOT NULL,
+    "lastname" TEXT NOT NULL,
+    "bio" TEXT,
     "role" "AdminRole" NOT NULL,
     "parentAdminId" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -87,8 +92,13 @@ CREATE TABLE "Club" (
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
     "email" TEXT NOT NULL,
+    "emailVerified" BOOLEAN NOT NULL DEFAULT false,
+    "phone" TEXT NOT NULL,
+    "phoneVerified" BOOLEAN NOT NULL DEFAULT false,
     "password" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
+    "firstname" TEXT NOT NULL,
+    "lastname" TEXT NOT NULL,
+    "bio" TEXT,
     "membershipType" "UserMembershipType" NOT NULL DEFAULT 'ONE_CLUB',
     "membershipStartDate" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "membershipEndDate" TIMESTAMP(3) NOT NULL,
@@ -140,6 +150,17 @@ CREATE TABLE "Referral" (
 );
 
 -- CreateTable
+CREATE TABLE "GmailVerificationCode" (
+    "id" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "code" TEXT NOT NULL,
+    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "GmailVerificationCode_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "_ClubToUser" (
     "A" TEXT NOT NULL,
     "B" TEXT NOT NULL,
@@ -164,6 +185,9 @@ CREATE UNIQUE INDEX "User_leadingChapterId_key" ON "User"("leadingChapterId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_leadingClubId_key" ON "User"("leadingClubId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "GmailVerificationCode_email_key" ON "GmailVerificationCode"("email");
 
 -- CreateIndex
 CREATE INDEX "_ClubToUser_B_index" ON "_ClubToUser"("B");
