@@ -1,11 +1,16 @@
 "use client";
-import { signOut } from "next-auth/react";
 import React from "react";
+import GetMasterFranchise from "../../../../components/admins/admin/GetMasterFranchise";
+import Link from "next/link";
 
 const page = () => {
 	return (
 		<div>
-			Admin dashboard <button onClick={() => signOut()}>Signout</button>
+			<div>Admin Dasboard</div>
+			<div>
+				<Link href={"/admin/country"}>Create Country</Link>
+			</div>
+			<GetMasterFranchise />
 		</div>
 	);
 };

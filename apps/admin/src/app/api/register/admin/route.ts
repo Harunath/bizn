@@ -42,6 +42,10 @@ export const POST = async (request: NextRequest) => {
 						firstname,
 						lastname,
 						role: AdminRole.ADMIN,
+						roleStartDate: new Date(),
+						roleEndDate: new Date(
+							new Date().setFullYear(new Date().getFullYear() + 100)
+						),
 					},
 				});
 				if (admin.id)

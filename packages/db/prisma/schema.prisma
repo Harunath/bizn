@@ -13,6 +13,7 @@ enum AdminRole {
   MASTER_ADMIN
   SUPER_ADMIN
   REGIONAL_ADMIN
+  GUEST
 }
 
 enum UserMembershipType {
@@ -52,6 +53,9 @@ model Administrator {
   masterFranchises   MasterFranchise[] 
   superFranchises    SuperFranchise[]
   regionalFranchises RegionalFranchise[]
+
+  roleStartDate DateTime  @default(now())
+  roleEndDate   DateTime
   
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
@@ -100,7 +104,7 @@ model User {
 model MasterFranchise {
   id             String      @id @default(cuid())
   name           String
-  countries      String[]
+  countries      Country[]   @relation("MasterCountries")
   
   admin          Administrator @relation(fields: [adminId], references: [id])
   adminId        String
@@ -114,7 +118,8 @@ model MasterFranchise {
 model SuperFranchise {
   id             String      @id @default(cuid())
   name           String
-  country        String
+  country        Country     @relation("SuperFranchiseCountry", fields: [countryId], references: [id])
+  countryId      String
   
   masterFranchise   MasterFranchise @relation(fields: [masterFranchiseId], references: [id])
   masterFranchiseId String
@@ -131,7 +136,8 @@ model SuperFranchise {
 model RegionalFranchise {
   id             String      @id @default(cuid())
   name           String
-  state          String
+  state                State    @relation("StateRegionalFranchise", fields: [stateId], references: [id])
+  stateId              String
   
   superFranchise    SuperFranchise @relation(fields: [superFranchiseId], references: [id])
   superFranchiseId  String
@@ -245,4 +251,33 @@ model GmailVerificationCode {
   code      String
   expiresAt DateTime
   createdAt DateTime @default(now())
+}
+
+model Country {
+  id         String   @id @default(cuid())
+  name       String   @unique                 // e.g., "India"
+  isoCode    String   @unique                 // e.g., "IN"
+  phoneCode  String                            // e.g., "+91"
+
+  states     State[]
+  superFranchises SuperFranchise[] @relation("SuperFranchiseCountry")
+  masterFranchises MasterFranchise[] @relation("MasterCountries")
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+
+model State {
+  id         String   @id @default(cuid())
+  name       String                             // e.g., "Andhra Pradesh"
+  code       String?                            // Optional: e.g., "AP"
+  
+  country    Country   @relation(fields: [countryId], references: [id])
+  countryId  String
+
+  regionalFranchises RegionalFranchise[] @relation("StateRegionalFranchise")
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }

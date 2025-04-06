@@ -33,6 +33,9 @@ export default function LoginPage() {
 				case AdminRole.REGIONAL_ADMIN:
 					router.push("/regional-franchise/dashboard");
 					break;
+				case AdminRole.GUEST:
+					router.push("/guest/dashboard");
+					break;
 				default:
 					logOut();
 					break;
@@ -45,7 +48,7 @@ export default function LoginPage() {
 	const handleGoogleSignIn = async () => {
 		setLoading(true);
 		try {
-			await signIn("google", { callbackUrl: "/dashboard" });
+			await signIn("google", { callbackUrl: "/login" });
 		} catch (error) {
 			console.error("Google sign-in failed: ", error);
 			setError("Google sign-in failed.");
@@ -70,7 +73,6 @@ export default function LoginPage() {
 		} else {
 			router.push("/dashboard");
 		}
-
 		setLoading(false);
 	};
 

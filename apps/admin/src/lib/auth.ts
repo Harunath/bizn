@@ -84,7 +84,10 @@ export const authOptions: NextAuthOptions = {
 		async redirect({ baseUrl }) {
 			return baseUrl + "/login";
 		},
-		async jwt({ token, user }) {
+		async jwt({ token, user, trigger, session }) {
+			if (trigger === "update" && session?.role) {
+				token.role = session.role;
+			}
 			// Add user information to the token
 			if (user && user.email) {
 				const res = await prisma.administrator.findFirst({

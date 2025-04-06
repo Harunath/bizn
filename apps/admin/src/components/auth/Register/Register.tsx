@@ -81,7 +81,7 @@ function Register() {
 	const verifyOtp = async () => {
 		try {
 			registerSchema.parse(formData);
-			const res = await fetch("/api/register/admin", {
+			const res = await fetch("/api/register/guest", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ ...formData, token }),
