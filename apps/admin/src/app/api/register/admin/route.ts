@@ -6,16 +6,6 @@ export const POST = async (request: NextRequest) => {
 	try {
 		const body = await request.json();
 		const { email, phone, password, firstname, lastname, otp, token } = body;
-		console.log(
-			email,
-			phone,
-			password,
-			firstname,
-			lastname,
-			otp,
-			token,
-			"data"
-		);
 		if (otp) {
 			const res = await fetch("http://localhost:3001/api/auth/verify-otp", {
 				method: "POST",
@@ -30,7 +20,6 @@ export const POST = async (request: NextRequest) => {
 						message: "All fields are required!",
 					});
 				}
-				console.log(email, phone, password, firstname, lastname, "data");
 				const hashedPassword = await bcrypt.hash(password, 10); // 10 is the salt rounds
 				const admin = await prisma.administrator.create({
 					data: {

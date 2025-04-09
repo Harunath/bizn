@@ -13,7 +13,7 @@ interface adminType {
 const MasterFranchiseUpgrade = () => {
 	const [admins, setAdmins] = useState<adminType[]>([]);
 	const [error, setError] = useState("");
-	const [selectedAdmin, setSelectedAdmin] = useState<string | null>(null);
+	const [parentAdminId, setParentAdminId] = useState<string | null>(null);
 	const { update, data: session } = useSession();
 
 	useEffect(() => {
@@ -40,16 +40,19 @@ const MasterFranchiseUpgrade = () => {
 
 		// router.push(cashfreeUrl);
 		try {
-			console.log(selectedAdmin);
+			console.log(parentAdminId);
 			const res = await fetch("/api/upgrade/master-admin", {
 				method: "POST",
-				body: JSON.stringify({ parentAdminId: selectedAdmin }),
+				body: JSON.stringify({ parentAdminId: parentAdminId }),
 			});
 			const data = await res.json();
 
 			if (data.message == "success") {
 				// Update NextAuth session with new role
-				await update({ role: AdminRole.MASTER_ADMIN });
+				await update({
+					role: AdminRole.MASTER_ADMIN,
+					parentAdminId: parentAdminId,
+				});
 				toast.success(
 					`${data.master_admin.firstname + " " + data.master_admin.lastname} is upgraded to Master Franchise admin!`
 				);
@@ -71,8 +74,8 @@ const MasterFranchiseUpgrade = () => {
 				Gain exclusive rights to operate at a higher level.
 			</p>
 			<select
-				value={selectedAdmin || ""}
-				onChange={(e) => setSelectedAdmin(e.target.value)}>
+				value={parentAdminId || ""}
+				onChange={(e) => setParentAdminId(e.target.value)}>
 				<option value="">Select an Admin</option>
 				{admins.map((admin) => (
 					<option key={admin.id} value={admin.id}>

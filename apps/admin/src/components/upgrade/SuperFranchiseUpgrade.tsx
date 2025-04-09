@@ -25,9 +25,7 @@ const SuperFranchiseUpgrade = () => {
 	const [countries, setCountries] = useState<Country[] | null>(null);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
-	const [selectedMasterFranchise, setSelectedMasterFranchise] = useState<
-		string | null
-	>(null);
+	const [parentAdminId, setParentAdminId] = useState<string | null>(null);
 
 	const { update, data: session } = useSession();
 
@@ -85,7 +83,7 @@ const SuperFranchiseUpgrade = () => {
 				headers: {
 					"Content-Type": "application/json",
 				},
-				body: JSON.stringify({ parentAdminId: selectedMasterFranchise }),
+				body: JSON.stringify({ parentAdminId: parentAdminId }),
 			});
 
 			const data = await response.json();
@@ -93,7 +91,10 @@ const SuperFranchiseUpgrade = () => {
 			if (data.message == "success") {
 				// Update NextAuth session with new role
 				console.log("inside");
-				await update({ role: AdminRole.SUPER_ADMIN });
+				await update({
+					role: AdminRole.SUPER_ADMIN,
+					parentAdminId: parentAdminId,
+				});
 				toast.success(
 					`${data.super_admin.firstname + " " + data.super_admin.lastname} is upgraded to Super Franchise admin!`
 				);
@@ -135,9 +136,9 @@ const SuperFranchiseUpgrade = () => {
 			</select>
 			<select
 				className="border p-2 mb-4"
-				value={selectedMasterFranchise || ""}
+				value={parentAdminId || ""}
 				disabled={!countryid}
-				onChange={(e) => setSelectedMasterFranchise(e.target.value)}>
+				onChange={(e) => setParentAdminId(e.target.value)}>
 				<option value="">Select Master Franchise</option>
 				{masterFranchise.length > 0 &&
 					masterFranchise.map((franchise: MasterFranchiseType) => (

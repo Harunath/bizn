@@ -85,8 +85,9 @@ export const authOptions: NextAuthOptions = {
 			return baseUrl + "/login";
 		},
 		async jwt({ token, user, trigger, session }) {
-			if (trigger === "update" && session?.role) {
+			if (trigger === "update" && session?.role && session.parentAdminId) {
 				token.role = session.role;
+				token.parentAdminId = session.parentAdminId;
 			}
 			// Add user information to the token
 			if (user && user.email) {
