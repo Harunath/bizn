@@ -20,6 +20,7 @@
 	"devDependencies": {
 		"@repo/db": "*",
 		"@repo/ui": "*",
+		"@repo/payments": "*",
 		"@tailwindcss/postcss": "^4",
 		"@types/jsonwebtoken": "^9.0.9",
 		"@types/node": "^20",

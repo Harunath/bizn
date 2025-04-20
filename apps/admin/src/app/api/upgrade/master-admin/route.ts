@@ -13,7 +13,8 @@ export const POST = async (request: Request) => {
 			return NextResponse.json({ message: "failed" }, { status: 403 });
 		}
 		// parent admin check
-		const parentAdmin = await prisma.administrator.findUniqueOrThrow({
+
+		const parentAdmin = await prisma.administrator.findUnique({
 			where: {
 				id: parentAdminId,
 			},
@@ -21,15 +22,6 @@ export const POST = async (request: Request) => {
 				role: true,
 			},
 		});
-		if (parentAdmin.role !== AdminRole.ADMIN) {
-			return NextResponse.json(
-				{
-					message: "Parent admin is not a main Admin",
-				},
-				{ status: 403 }
-			);
-		}
-		// upgrading
 		const master_admin = await prisma.administrator.update({
 			where: {
 				id: session?.user.id,
@@ -51,6 +43,7 @@ export const POST = async (request: Request) => {
 				roleEndDate: true,
 			},
 		});
+
 		return NextResponse.json(
 			{ message: "success", master_admin },
 			{ status: 201 }

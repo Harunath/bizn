@@ -54,6 +54,8 @@ model Administrator {
   superFranchises    SuperFranchise[]
   regionalFranchises RegionalFranchise[]
 
+  order       Order[]
+
   roleStartDate DateTime  @default(now())
   roleEndDate   DateTime
   
@@ -81,6 +83,8 @@ model User {
   // Membership Details
   membershipStartDate DateTime  @default(now())
   membershipEndDate   DateTime
+
+  order       Order[]
 
   leadingChapter     Chapter? @relation("ChapterLeadership")
   leadingChapterId   String? @unique
@@ -280,4 +284,69 @@ model State {
 
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+}
+
+
+model Order {
+  id             String      @id @default(cuid())
+  userId         String?     // Nullable: Order can be placed by a user or admin
+  administratorId String?
+  cashfreeOrderId String   @unique
+  paymentSessionId String  @unique
+  status         OrderStatus @default(PENDING)
+  totalAmount    Decimal
+  currency       String      @default("INR")
+  notes          String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  orderItems     OrderItem[]
+  payments       Payment[]
+  user           User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  administrator  Administrator? @relation(fields: [administratorId], references: [id], onDelete: Cascade)
+}
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  PAID
+  FAILED
+  REFUNDED
+  CANCELLED
+}
+
+model OrderItem {
+  id                  String   @id @default(cuid())
+  orderId             String
+  itemId              String? 
+  quantity            Int
+  pricePerUnit        Decimal  
+  totalPrice          Decimal  
+  itemDetailsSnapshot Json?    
+  createdAt           DateTime 
+  updatedAt           DateTime 
+  order               Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model Payment {
+  id                  String       @id @default(cuid())
+  orderId             String       
+  cashfreeOrderId   String    @unique
+  paymentSessionId    String    @unique 
+  status              PaymentStatus @default(INITIATED)
+  amount              Decimal
+  currency            String       @default("INR")
+  paymentMethod       String?
+  gatewayResponse     Json?
+  errorMessage        String?
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+  processedAt         DateTime?    
+  order               Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+enum PaymentStatus {
+  INITIATED
+  PENDING
+  SUCCESSFUL
+  FAILED
+  FLAGGED
 }
