@@ -112,9 +112,6 @@ function generateOrderId(): string {
 export const createCashfreeOrder = async (
 	input: CreateOrderInput
 ): Promise<CreateOrderResponse> => {
-	console.log("path " + path.resolve(__dirname, "../.env"));
-	console.log(process.env.CASHFREE_APP_ID + " CASHFREE_APP_ID");
-
 	// --- Validation ---
 	if (!CASHFREE_API_ENDPOINT || !CASHFREE_APP_ID || !CASHFREE_SECRET_KEY) {
 		console.error(
@@ -150,7 +147,7 @@ export const createCashfreeOrder = async (
 		order_currency: input.order_currency,
 		customer_details: input.customer_details,
 		order_meta: {
-			return_url: input.return_url,
+			return_url: input.return_url + `/${orderId}`,
 			notify_url: process.env.CASHFREE_WEBHOOK_URL, // Optional: Can be set here or globally in dashboard
 		},
 		order_note: input.order_note || `Order ${orderId}`,

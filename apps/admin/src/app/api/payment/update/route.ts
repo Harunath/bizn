@@ -19,7 +19,7 @@ export const POST = async (request: NextRequest) => {
 					cashfreeOrderId: orderData.order_id, // Assuming you have this field in your Payment model
 				},
 				data: {
-					status: paymentData.payment_status,
+					status: "SUCCESS",
 					amount: paymentData.payment_amount,
 					currency: paymentData.payment_currency,
 					paymentMethod: paymentData.payment_method,

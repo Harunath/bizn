@@ -5,8 +5,16 @@ import { NextResponse } from "next/server";
 
 export const POST = async (request: Request) => {
 	try {
+		const session = await getServerSession(authOptions);
+		if (!session?.user.id) {
+			return NextResponse.json(
+				{ message: "user is not logged in" },
+				{ status: 403 }
+			);
+		}
 		const body = await request.json();
 		const { countryid, name } = body;
+
 		if (!countryid || !name) {
 			return NextResponse.json(
 				{ message: "Invalid country or name" },
@@ -20,13 +28,6 @@ export const POST = async (request: Request) => {
 			return NextResponse.json(
 				{ message: "Country not found" },
 				{ status: 404 }
-			);
-		}
-		const session = await getServerSession(authOptions);
-		if (!session?.user.id) {
-			return NextResponse.json(
-				{ message: "user is not logged in" },
-				{ status: 403 }
 			);
 		}
 		const adminId = session.user.id;
@@ -49,6 +50,7 @@ export const POST = async (request: Request) => {
 				},
 			},
 		});
+
 		if (admin.role !== "SUPER_ADMIN") {
 			return NextResponse.json({ message: "Forbidden" }, { status: 403 });
 		}

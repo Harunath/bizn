@@ -1,20 +1,19 @@
-import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { AdminRole } from "@prisma/client";
 import prisma from "@repo/db/client";
-import { authOptions } from "../../../../lib/auth";
 
 export const POST = async (request: Request) => {
 	try {
 		const body = await request.json();
-		const { parentAdminId } = body;
-		console.log("body", body);
-		const session = await getServerSession(authOptions);
-		if (!session?.user.id || session.user.role !== AdminRole.GUEST) {
-			return NextResponse.json({ message: "failed" }, { status: 403 });
-		}
-		// parent admin check.
-		const parentAdmin = await prisma.administrator.findFirst({
+		const { parentAdminId, adminId } = body;
+
+		// parent admin check
+		if (!parentAdminId || !adminId)
+			return NextResponse.json(
+				{ message: "parentAdminId not found or adminId not found" },
+				{ status: 403 }
+			);
+		const parentAdmin = await prisma.administrator.findUnique({
 			where: {
 				id: parentAdminId,
 			},
@@ -22,18 +21,14 @@ export const POST = async (request: Request) => {
 				role: true,
 			},
 		});
-		if (parentAdmin?.role !== AdminRole.MASTER_ADMIN) {
+		if (!parentAdmin || parentAdmin?.role !== AdminRole.MASTER_ADMIN)
 			return NextResponse.json(
-				{
-					message: "Parent admin is not a Master Franchise admin",
-				},
+				{ message: "parent admin not found or not a master admin" },
 				{ status: 403 }
 			);
-		}
-		// upgrading
 		const super_admin = await prisma.administrator.update({
 			where: {
-				id: session?.user.id,
+				id: adminId,
 			},
 			data: {
 				role: AdminRole.SUPER_ADMIN,
@@ -65,12 +60,12 @@ export const POST = async (request: Request) => {
 				roleEndDate: true,
 			},
 		});
+
 		return NextResponse.json(
 			{ message: "success", super_admin },
 			{ status: 201 }
 		);
 	} catch (e) {
-		console.log(e);
 		return NextResponse.json({ message: "failed" }, { status: 500 });
 	}
 };

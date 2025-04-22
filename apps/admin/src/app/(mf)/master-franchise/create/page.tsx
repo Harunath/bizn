@@ -1,5 +1,5 @@
 import React from "react";
-import CreateMasterFranchiseForm from "../../../../../components/admins/master-admin/CreateMasterFranchiseForm";
+import CreateMasterFranchiseForm from "../../../../components/admins/master-admin/CreateMasterFranchiseForm";
 
 const page = () => {
 	return (

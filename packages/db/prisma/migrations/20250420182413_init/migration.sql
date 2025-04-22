@@ -7,6 +7,12 @@ CREATE TYPE "UserMembershipType" AS ENUM ('ONE_CLUB', 'VIP', 'GOLD');
 -- CreateEnum
 CREATE TYPE "ReferralType" AS ENUM ('SELF', 'THIRD_PARTY');
 
+-- CreateEnum
+CREATE TYPE "OrderStatus" AS ENUM ('PENDING', 'PROCESSING', 'PAID', 'FAILED', 'REFUNDED', 'CANCELLED');
+
+-- CreateEnum
+CREATE TYPE "PaymentStatus" AS ENUM ('INITIATED', 'PENDING', 'SUCCESS', 'FAILED', 'FLAGGED');
+
 -- CreateTable
 CREATE TABLE "Administrator" (
     "id" TEXT NOT NULL,
@@ -205,6 +211,57 @@ CREATE TABLE "State" (
 );
 
 -- CreateTable
+CREATE TABLE "Order" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT,
+    "administratorId" TEXT,
+    "cashfreeOrderId" TEXT NOT NULL,
+    "paymentSessionId" TEXT NOT NULL,
+    "status" "OrderStatus" NOT NULL DEFAULT 'PENDING',
+    "totalAmount" DECIMAL(65,30) NOT NULL,
+    "currency" TEXT NOT NULL DEFAULT 'INR',
+    "notes" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Order_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "OrderItem" (
+    "id" TEXT NOT NULL,
+    "orderId" TEXT NOT NULL,
+    "itemId" TEXT,
+    "quantity" INTEGER NOT NULL,
+    "pricePerUnit" DECIMAL(65,30) NOT NULL,
+    "totalPrice" DECIMAL(65,30) NOT NULL,
+    "itemDetailsSnapshot" JSONB,
+    "createdAt" TIMESTAMP(3) NOT NULL,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "OrderItem_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Payment" (
+    "id" TEXT NOT NULL,
+    "orderId" TEXT NOT NULL,
+    "cashfreeOrderId" TEXT NOT NULL,
+    "paymentSessionId" TEXT NOT NULL,
+    "status" "PaymentStatus" NOT NULL DEFAULT 'INITIATED',
+    "amount" DECIMAL(65,30) NOT NULL,
+    "currency" TEXT NOT NULL DEFAULT 'INR',
+    "paymentMethod" TEXT,
+    "gatewayResponse" JSONB,
+    "errorMessage" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "processedAt" TIMESTAMP(3),
+
+    CONSTRAINT "Payment_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "_ClubToUser" (
     "A" TEXT NOT NULL,
     "B" TEXT NOT NULL,
@@ -255,6 +312,18 @@ CREATE UNIQUE INDEX "Country_name_key" ON "Country"("name");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Country_isoCode_key" ON "Country"("isoCode");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Order_cashfreeOrderId_key" ON "Order"("cashfreeOrderId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Order_paymentSessionId_key" ON "Order"("paymentSessionId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Payment_cashfreeOrderId_key" ON "Payment"("cashfreeOrderId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Payment_paymentSessionId_key" ON "Payment"("paymentSessionId");
 
 -- CreateIndex
 CREATE INDEX "_ClubToUser_B_index" ON "_ClubToUser"("B");
@@ -315,6 +384,18 @@ ALTER TABLE "Referral" ADD CONSTRAINT "Referral_receiverId_fkey" FOREIGN KEY ("r
 
 -- AddForeignKey
 ALTER TABLE "State" ADD CONSTRAINT "State_countryId_fkey" FOREIGN KEY ("countryId") REFERENCES "Country"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Order" ADD CONSTRAINT "Order_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Order" ADD CONSTRAINT "Order_administratorId_fkey" FOREIGN KEY ("administratorId") REFERENCES "Administrator"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "OrderItem" ADD CONSTRAINT "OrderItem_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES "Order"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Payment" ADD CONSTRAINT "Payment_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES "Order"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "_ClubToUser" ADD CONSTRAINT "_ClubToUser_A_fkey" FOREIGN KEY ("A") REFERENCES "Club"("id") ON DELETE CASCADE ON UPDATE CASCADE;

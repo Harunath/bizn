@@ -1,19 +1,18 @@
-import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { AdminRole } from "@prisma/client";
 import prisma from "@repo/db/client";
-import { authOptions } from "../../../../lib/auth";
 
 export const POST = async (request: Request) => {
 	try {
 		const body = await request.json();
-		const { parentAdminId } = body;
-		const session = await getServerSession(authOptions);
-		if (!session?.user.id && session?.user.role != AdminRole.GUEST) {
-			return NextResponse.json({ message: "failed" }, { status: 403 });
-		}
-		// parent admin check
+		const { parentAdminId, adminId } = body;
 
+		// parent admin check
+		if (!parentAdminId || !adminId)
+			return NextResponse.json(
+				{ message: "parentAdminId not found or adminId not found" },
+				{ status: 403 }
+			);
 		const parentAdmin = await prisma.administrator.findUnique({
 			where: {
 				id: parentAdminId,
@@ -22,9 +21,14 @@ export const POST = async (request: Request) => {
 				role: true,
 			},
 		});
+		if (!parentAdmin || parentAdmin?.role !== AdminRole.ADMIN)
+			return NextResponse.json(
+				{ message: "parent admin not found or not an admin" },
+				{ status: 403 }
+			);
 		const master_admin = await prisma.administrator.update({
 			where: {
-				id: session?.user.id,
+				id: adminId,
 			},
 			data: {
 				role: AdminRole.MASTER_ADMIN,
@@ -49,7 +53,6 @@ export const POST = async (request: Request) => {
 			{ status: 201 }
 		);
 	} catch (e) {
-		console.log(e);
 		return NextResponse.json({ message: "failed" }, { status: 500 });
 	}
 };

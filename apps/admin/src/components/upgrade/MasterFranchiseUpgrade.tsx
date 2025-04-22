@@ -1,8 +1,5 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
-import { AdminRole } from "@repo/db/client";
 import { toast } from "react-toastify";
 import { CheckoutPage } from "@repo/ui/CheckoutPage";
 
@@ -34,7 +31,7 @@ const MasterFranchiseUpgrade = () => {
 
 	const handleUpgrade = async () => {
 		try {
-			const res = await fetch("/api/upgrade/payment", {
+			const res = await fetch("/api/upgrade/master-admin/payment", {
 				method: "POST",
 				body: JSON.stringify({ parentAdminId: parentAdminId }),
 			});

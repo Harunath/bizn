@@ -346,7 +346,7 @@ model Payment {
 enum PaymentStatus {
   INITIATED
   PENDING
-  SUCCESSFUL
+  SUCCESS
   FAILED
   FLAGGED
 }

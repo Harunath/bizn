@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createCashfreeOrder } from "@repo/payments/order";
 import prisma, { AdminRole } from "@repo/db/client";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../../../../lib/auth";
+import { authOptions } from "../../../../../lib/auth";
 
 interface CustomerDetails {
 	customer_id: string; // Unique ID for the customer in your system
@@ -36,9 +36,18 @@ export const POST = async (request: Request) => {
 				id: parentAdminId,
 			},
 			select: {
+				id: true,
 				role: true,
 			},
 		});
+		if (!parentAdmin || parentAdmin.role !== AdminRole.MASTER_ADMIN)
+			return NextResponse.json(
+				{
+					message:
+						"parent admin not found or Parent Admin is not a master admin",
+				},
+				{ status: 404 }
+			);
 
 		const admin = await prisma.administrator.findUnique({
 			where: {
@@ -48,13 +57,15 @@ export const POST = async (request: Request) => {
 		if (!admin) {
 			return NextResponse.json({ message: "admin not found" }, { status: 404 });
 		}
-		// upgrading
+
+		// order creating
 
 		const input: CreateOrderInput = {
-			order_amount: 1,
+			order_amount: 1.11,
 			order_currency: "INR", // e.g., "INR"
-			return_url: "http://localhost:3001/guest/payment/callback", // URL to redirect admin back to after payment attempt
-			order_note: "upgrade", // Optional note
+			return_url:
+				"http://localhost:3001/guest/upgrade/super-franchise/payment/callback", // URL to redirect admin back to after payment attempt
+			order_note: "upgrade to super franchise", // Optional note
 			customer_details: {
 				customer_id: admin?.id, // Unique ID for the customer in your system
 				customer_email: admin?.email,
@@ -88,7 +99,11 @@ export const POST = async (request: Request) => {
 				quantity: 1,
 				pricePerUnit: 1.11,
 				totalPrice: 1.11,
-				itemDetailsSnapshot: {},
+				itemDetailsSnapshot: {
+					parentAdminId: parentAdmin.id,
+					role: AdminRole.SUPER_ADMIN,
+					adminId: session.user.id,
+				},
 				createdAt: new Date(),
 				updatedAt: new Date(),
 			},
@@ -98,6 +113,8 @@ export const POST = async (request: Request) => {
 				{ error: "internal server error" },
 				{ status: 500 }
 			);
+		console.log(orderItems, "orderItems");
+
 		return NextResponse.json(
 			{ message: "success", payment_session_id: res?.payment_session_id },
 			{ status: 400 }

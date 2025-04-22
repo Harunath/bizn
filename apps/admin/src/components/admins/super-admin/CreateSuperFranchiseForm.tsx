@@ -7,7 +7,7 @@ import { toast } from "react-toastify";
 import { Country } from "@repo/db/client";
 
 interface SuperFranchiseInput {
-	country: string;
+	countryid: string;
 	name: string;
 }
 
@@ -32,7 +32,7 @@ const CreateSuperFranchiseForm: React.FC = () => {
 
 	useEffect(() => {
 		getMasterFranchise();
-	});
+	}, []);
 	const getMasterFranchise = async () => {
 		try {
 			const res = await fetch("/api/admins/super-admin/master-franchise");
@@ -40,14 +40,15 @@ const CreateSuperFranchiseForm: React.FC = () => {
 			if (result.message != "success") {
 				toast.error(result.message);
 			}
-			setMasterFranchise(result.masterFranchises);
+			console.log(result.masterFranchise);
+			setMasterFranchise(result.masterFranchise);
 		} catch (e) {
 			if (e instanceof Error) toast.error(e.message);
 			else toast.error("failed to fetch master franchise details");
 		}
 	};
 	// lib/api.ts (or utils/api.ts)
-	const createMasterFranchise = async (
+	const createSuperFranchise = async (
 		data: SuperFranchiseInput
 	): Promise<SuperFranchiseResponse> => {
 		try {
@@ -61,22 +62,14 @@ const CreateSuperFranchiseForm: React.FC = () => {
 
 			const result = await response.json();
 
-			if (result.status != 201) {
+			if (result.message == "success") {
+				return result as SuperFranchiseResponse;
+			} else {
 				// If API returns a specific error message in JSON under 'message' or 'error' key
 				throw new Error(
 					result.error || `HTTP error! status: ${response.status}`
 				);
 			}
-
-			// Assuming the backend sends { message: 'success', masterFranchise: {...} } on success
-			// and { message: 'failed', ... } on handled failures (like permissions)
-			if (result.message === "failed") {
-				throw new Error(
-					"Failed to create master franchise. Check permissions or input."
-				);
-			}
-
-			return result as SuperFranchiseResponse;
 		} catch (error) {
 			console.error("API call failed:", error);
 			// Return a structured error response
@@ -101,9 +94,9 @@ const CreateSuperFranchiseForm: React.FC = () => {
 			return;
 		}
 
-		const data: SuperFranchiseInput = { country, name };
+		const data: SuperFranchiseInput = { countryid: country, name };
 
-		const response = await createMasterFranchise(data);
+		const response = await createSuperFranchise(data);
 
 		if (response.message === "success" && response.superFranchise) {
 			toast.success(
@@ -143,7 +136,7 @@ const CreateSuperFranchiseForm: React.FC = () => {
 					className="p-1"
 					onChange={(e) => setCountry(e.target.value)}
 					disabled={!masterFranchise || masterFranchise.countries.length == 0}>
-					<option value="">Select Country</option>
+					<option value="">Select Master franchise</option>
 					{masterFranchise &&
 						masterFranchise.countries?.length > 0 &&
 						masterFranchise?.countries.map((country, index) => (
