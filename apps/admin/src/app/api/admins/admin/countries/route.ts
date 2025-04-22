@@ -31,3 +31,22 @@ export const POST = async (request: Request) => {
 		);
 	}
 };
+
+
+export const GET = async () => {
+	try {
+	  const countries = await prisma.country.findMany({
+		orderBy: {
+		  name: "asc",
+		},
+	  });
+  
+	  return NextResponse.json({ countries }, { status: 200 });
+	} catch (error) {
+	  return NextResponse.json(
+		{ message: "Error fetching countries" },
+		{ status: 500 }
+	  );
+	}
+  };
+  
